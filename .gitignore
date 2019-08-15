@@ -1,0 +1,9 @@
+.idea/**
+.git/**
+resources/**
+debug/**
+out/**
+
+!out/example.log
+!debug/example.log
+
