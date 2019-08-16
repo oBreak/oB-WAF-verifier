@@ -18,7 +18,7 @@ Compatible for Linux and Mac, re: directory functions for pulling in sites, need
 
 - Python 3.6+ installed
 - Network connectivity, assuming target is outside of local machine
-- Install `requests` modules.
+- Install `requests`, `configparser`, and `texttable` modules.
 
 ### Usage
 

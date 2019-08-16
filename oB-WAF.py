@@ -16,12 +16,16 @@ import time
 from pathlib import Path
 import os
 from os import listdir
+import configparser
+import texttable
 
 # Global vars
 
-debug = ['***********','Begin debug log']
-out = []
-iF = []
+debug           = ['***********','Begin debug log','***********']
+out             = []
+iF              = []
+siteTups        = []
+sites           = []
 
 # Taken from recon
 
@@ -49,7 +53,6 @@ debugfileWin    = os.path.join(fileDir, 'debug\\debug.txt')
 mypathWin       = home + "\\Projects\\gh-oB-WAF-Verifier\\in\\"
 outfileWin      = os.path.join(fileDir, 'out\\out.txt')
 
-sites         = []
 fileCount       = int(0)
 conf            = {}
 lineBreaks      = str('\n')
@@ -69,6 +72,7 @@ does not add them to the inbound file list. Inbound file list is then returned b
 '''
 
 def inbound():
+    debug.append('\tinbound() start: checking /in/ folder for files containing sites to which we will connect')
     global fileCount, mypath
     iF = []   # iF is inbound files
     try:
@@ -103,18 +107,44 @@ def inbound():
         for x in iF:
             debug.append('\t\t' + x + ' added to inbound files list variable (iF)')
         debug.append('\t\tfileCount is: ' + str(fileCount))
-    # for t in iF:
-    #     print(t, "in inbound()")
+    debug.append('\tinbound() end')
     return iF
+
+
+def readConf():
+    debug.append('\treadConf() start: reading configuration file for search terms')
+    global conf
+    conf = configparser.ConfigParser()
+    conf.read('conf/conf.ini')
+    if debugSet == True:
+        debug.append('\t\tConfiguration sections loaded:')
+        for i in conf.sections():
+            debug.append('\t\t\t' + str(conf[i]))
+    debug.append('\treadConf() end')
+    return
+
 
 
 '''
 parse() is intended to pull the websites from files in the inbound file list (iF), which is created in inbound(), 
-and adds them to the sites list. The sites list is a global variable that is used by the scrape() function.
+and adds them to the sites list. This is accomplished by putting the "line" from the file into a tuple in the
+webs variable. Then the webs first tuple portion is added to the site list.
+
+Ex:
+
+webs = ('https://www.example.com', <blank>)
+sites = ['https://www.example.com']
+
+The sites list is a global variable that is used by the scrape() function.
 '''
 def parse(iF):
+    debug.append('\tparse() start: extracting sites to connect to from files in the /in/ folder')
     file = open('in/' + iF, 'r')
     for line in file:
+        # line is http address
+        # Reset webs to empty tuple
+        webs = ()
+        # print(line + ' in file ' + iF)
         line = line.strip()  # Removes blank lines.
         if line:
             ''' This portion of the script is meant to discover if the inbound files are correctly formatted.
@@ -131,29 +161,121 @@ def parse(iF):
                 if debugSet == True:
                 debugLog.append('Appending ' + line + ' to sites.')
             '''
-            sites.append(line)
+            webs = (line,)
+            sites.append(webs[0])
             if debugSet == True:
-                debugLog.append('Appending ' + line + ' to sites.')
+                debug.append('\t\tAppending ' + webs[0] + ' to sites.')
+    debug.append('\tparse() end')
     pass
 
 '''
 scrape() is intended to get the response.text from each of the sites identified in the parse() function.
-The response text is then added to the out list, which is used by the webout() function.
+
+It checks the length of the 'sites' list. Then, for each site in the list, it will try a get request for the
+site. This get request is then appended to the 'out' list for output into the /out/ folder in the webout() function.
+
+Additionally, the response.text is also appended to the 'siteTups' list as a tuple with...
+
+[('https://www.example.com/', 'Output of response.text'), ('https://www.example2.com/', 'Output of response.text'), ...]
+
 '''
 def scrape():
+    debug.append('\tscrape() start: sending get requests to sites')
     global out
-    #urls = ['http://www.google.com', 'https://www.espn.com']
-    for t in sites:
-        # print(t)
+    global siteTups
+    # Take sites tuple which is now (site address, <none>) and use requests to get the text version of the site.
+
+    sitecount = len(sites)
+    # print(sitecount)
+
+    for i in range(0,(sitecount)):
+        # print(sites[i])
+
         try:
-            response = requests.get(t)
+            response = requests.get(sites[i])
         except:
             debug.append('\t\tError with requests in scrape()')
-            return
-    # print(response.status_code)
-    # print(response.text)
-    out.append(response.text)
+        try:
+            debug.append('\t\tStatus code of scrape on site ' + sites[i] + ' is: ' + str(response.status_code))
+            if response.status_code == 200:
+                debug.append('\t\tConnection successful.')
+        except:
+            debug.append('\t\tError getting status code of site: ' + sites[i])
+        bleh = response.text
+        # out.append('*' * 40)
+        # out.append(sites[i])
+        # out.append('*' * 40)
+        # out.append('')
+        # out.append('')
+        # out.append('')
+        # out.append(bleh)
+
+        siteTups.append((sites[i],bleh))
+    # out.append(response.text)
     debug.append('\tscrape() end')
+
+    return
+
+'''
+passfail() is intended to check whether criteria set in the configuration file matches any of the response.text of the
+get request that was obtained in scrape().
+
+It searches...
+    First term -> check site 1, check site 2, etc.
+    Second term -> check site 1, check site 2, etc.
+
+It checks for terms defined in the 'terms' section of the config, ignoring other parts of the config.
+'''
+
+def passfail():
+    debug.append('\tpassfail() start: checking for term matches against web response')
+    global siteTups
+    termcount = 0
+    for j in conf['terms']:
+        debug.append('\t\tIterating term: ' + j )
+        termcount = termcount + 1
+        criteria = conf['terms'][j]
+
+        # Not pretty version
+
+        for i in siteTups:
+            debug.append('\t\t\tIterating site: ' + i[0])
+            if i[1].find(criteria) != -1:
+                out.append("Site " + i[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
+            else:
+                out.append("Site " + i[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
+        # Pretty version (does not work yet)
+    # rows = termcount * len(sites())
+    # print(rows)
+    # x = texttable.Texttable()
+    # x.add_rows([['Site','Term','Match'],['junk','stuff','yes']])
+    # out.append(x.draw())
+    debug.append('\tpassfail() end')
+    return
+
+'''
+siteinfo() is appending the website response.text output to the 'out'. This was originally in the parse()
+function but doesn't really belong there. Since parse needs to run, it breaks the ability to shift where 
+the output shows up in the output log. Since the point of the program is to determine pass/fail checks,
+the first part of the output shouldn't be a bunch of information that doesn't deliver the point.
+
+This information is still important for determining the text that you want to view, but should be after
+the pass fails.
+
+Also added some formatting so it is easier to read/decipher in the out text.
+'''
+
+def siteinfo():
+    debug.append('\tsiteinfo() start: sending site info to out list')
+    sitecount = len(sites)
+    for i in range(0,(sitecount)):
+        out.append('\n\n\n')
+        out.append('*' * 40)
+        out.append('For site: ' + siteTups[i][0])
+        out.append('*' * 40)
+        out.append(siteTups[i][1])
+        out.append('\n\n\n')
+    debug.append('\tsiteinfo() end')
     return
 
 '''
@@ -240,7 +362,10 @@ main() is the main program. Workflow is:
 
 - Get list of files with sites to review
 - Extract sites from list of files
-- For each site in sites, requests -> site; append to out list
+- For each site in sites, requests from the sites and adds to sites and siteTups lists
+- Reads configuration file.
+- Checks against search criteria contained in configuration file; adds pass/fail results to out list.
+- Adds output from site response to out list.
 - Print debug log to debug file.
 - Print out list to out file.
 - End.
@@ -248,19 +373,13 @@ main() is the main program. Workflow is:
 
 def main():
     debug.append('main() start')
-    debug.append('\tinbound() start')
     iF = inbound()
-    # for i in iF:
-    #     print(i)
-    debug.append('\tinbound() end')
-    debug.append('\tparse() start')
     for t in iF:
         parse(t)
-    debug.append('\tparse() end')
-    debug.append('\tscrape() start')
-    for site in sites:
-        scrape()
-    debug.append('\tscrape() end')
+    scrape()
+    readConf()
+    passfail()
+    siteinfo()
     debug.append('main() end')
     if debugSet == True:
         debugout()
