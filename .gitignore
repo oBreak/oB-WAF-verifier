@@ -3,7 +3,8 @@
 resources/**
 debug/**
 out/**
+in/**
 
 !out/example.log
 !debug/example.log
-
+!in/example.txt
