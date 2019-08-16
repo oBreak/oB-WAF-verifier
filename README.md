@@ -4,7 +4,7 @@ For checking if WAF protections are working correctly for various sites.
 
 ### Author
 
-#####[oBreak](mailto:obreakemail@gmail.com)
+[oBreak](mailto:obreakemail@gmail.com)
 
 ### Version 
 

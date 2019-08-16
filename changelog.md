@@ -10,6 +10,8 @@
 - Added `scrape()` to use requests command.
 - Added `main()` for running program.
 - Added `inbound()` and `parse()` for handling which sites to connect to.
+- Replaced all instances of `targets` with `sites` as that is more appropriate in this context.
+- Added extensive commenting on what functions are intended to do and how they work.
 
 #### Style
 
