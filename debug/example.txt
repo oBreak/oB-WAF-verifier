@@ -1,0 +1,34 @@
+***********
+Begin debug log
+***********
+main() start
+	inbound() start: checking /in/ folder for files containing sites to which we will connect
+		iF (inbound files) contains:
+		example.txt added to inbound files list variable (iF)
+		fileCount is: 1
+	inbound() end
+	parse() start: extracting sites to connect to from files in the /in/ folder
+		Appending https://www.yahoo.com/robots.txt to sites.
+		Appending https://www.bestbuy.com/robots.txt to sites.
+	parse() end
+	scrape() start: sending get requests to sites
+		Status code of scrape on site https://www.yahoo.com/robots.txt is: 200
+		Connection successful.
+		Status code of scrape on site https://www.bestbuy.com/robots.txt is: 403
+	scrape() end
+	readConf() start: reading configuration file for search terms
+		Configuration sections loaded:
+			<Section: terms>
+			<Section: other>
+	readConf() end
+	passfail() start: checking for term matches against web response
+		Iterating term: term1
+			Iterating site: https://www.yahoo.com/robots.txt
+			Iterating site: https://www.bestbuy.com/robots.txt
+		Iterating term: term2
+			Iterating site: https://www.yahoo.com/robots.txt
+			Iterating site: https://www.bestbuy.com/robots.txt
+	passfail() end
+	siteinfo() start: sending site info to out list
+	siteinfo() end
+main() end

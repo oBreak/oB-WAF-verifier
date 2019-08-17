@@ -12,7 +12,7 @@ For checking if WAF protections are working correctly for various sites.
 
 ### Compatibility
 
-Compatible for Linux and Mac, re: directory functions for pulling in sites, need to test for Windows.
+Compatible for Linux, Windows, and Mac.
 
 ### Pre-requisites (Important or this will not work!)
 

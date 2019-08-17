@@ -28,6 +28,9 @@ to determine pass/fail checks, the first part of the output shouldn't be a bunch
 deliver the point.
 - Added pretty format through `texttable` for the output. This does not work yet. Can be found in the 
 `passfail()` function.
+- Verified cross compatibility between Windows, Linux, and Mac
+- Added example.txt in debug to initialize the folder
+
 
 #### Style
 
