@@ -4,7 +4,8 @@ resources/**
 debug/**
 out/**
 in/**
+conf/conf2.ini
 
-!out/example.log
-!debug/example.log
+!out/example.txt
+!debug/example.txt
 !in/example.txt

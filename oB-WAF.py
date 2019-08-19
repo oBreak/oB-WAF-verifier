@@ -37,7 +37,6 @@ outfileMac      = os.path.join(fileDir, 'out/out.txt')
 outfile         = os.path.join(fileDir, 'out/out.txt')
 debugfileMac    = os.path.join(fileDir, 'debug/debug.txt')
 debugfile       = os.path.join(fileDir, 'debug/debug.txt')
-scansrc         = os.path.join(fileDir, 'scansrc/')
 mypath          = ''
 mypathMac       = home + "/Projects/gh-oB-WAF-verifier/in/"
 
@@ -115,7 +114,7 @@ def readConf():
     debug.append('\treadConf() start: reading configuration file for search terms')
     global conf
     conf = configparser.ConfigParser()
-    conf.read('conf/conf.ini')
+    conf.read('conf/conf2.ini')
     if debugSet == True:
         debug.append('\t\tConfiguration sections loaded:')
         for i in conf.sections():
