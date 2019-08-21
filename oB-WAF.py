@@ -273,9 +273,7 @@ def passfail():
             # store list entry with list [site, term, pf value]
 
         sitenum = sitenum + 1
-
-
-
+    debug.append('\tpassfail() end.')
     return
 
 '''
@@ -296,7 +294,7 @@ def prettyOut():
     xtable = texttable.Texttable()
     xtable.add_rows(fullOut)
     out.append(xtable.draw())
-    debug.append('\tpassfail() end')
+    debug.append('\tprettyOut() end')
 
 
 '''
@@ -421,7 +419,7 @@ main() is the main program. Workflow is:
 '''
 
 def main():
-    debug.append('main() start')
+    debug.append('main() start: runs all of the functions for this program')
     iF = inbound()
     for t in iF:
         parse(t)
@@ -431,7 +429,7 @@ def main():
     prettyOut()
     siteinfo()
     webout()
-    debug.append('main() end')
+    #debug.append('main() end')    # this doesn't make sense because it's not actually ending here.
     if debugSet == True:
         debugout()
     return
