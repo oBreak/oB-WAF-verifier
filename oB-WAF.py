@@ -26,6 +26,8 @@ out             = []
 iF              = []
 siteTups        = []
 sites           = []
+testCases       = []
+fullOut         = [['Website','Search terms','Match']]
 
 # Taken from recon
 
@@ -114,7 +116,7 @@ def readConf():
     debug.append('\treadConf() start: reading configuration file for search terms')
     global conf
     conf = configparser.ConfigParser()
-    conf.read('conf/conf2.ini')
+    conf.read('conf/conf.ini')
     if debugSet == True:
         debug.append('\t\tConfiguration sections loaded:')
         for i in conf.sections():
@@ -182,14 +184,14 @@ def scrape():
     debug.append('\tscrape() start: sending get requests to sites')
     global out
     global siteTups
+    global testCases # New stuff
+
     # Take sites tuple which is now (site address, <none>) and use requests to get the text version of the site.
 
     sitecount = len(sites)
     # print(sitecount)
 
     for i in range(0,(sitecount)):
-        # print(sites[i])
-
         try:
             response = requests.get(sites[i])
         except:
@@ -200,17 +202,8 @@ def scrape():
                 debug.append('\t\tConnection successful.')
         except:
             debug.append('\t\tError getting status code of site: ' + sites[i])
-        bleh = response.text
-        # out.append('*' * 40)
-        # out.append(sites[i])
-        # out.append('*' * 40)
-        # out.append('')
-        # out.append('')
-        # out.append('')
-        # out.append(bleh)
-
-        siteTups.append((sites[i],bleh))
-    # out.append(response.text)
+        r = response.text
+        siteTups.append((sites[i],r))
     debug.append('\tscrape() end')
 
     return
@@ -227,30 +220,84 @@ It checks for terms defined in the 'terms' section of the config, ignoring other
 '''
 
 def passfail():
+    sitecount = len(sites)
     debug.append('\tpassfail() start: checking for term matches against web response')
     global siteTups
+    global fullOut
     termcount = 0
+    for i in range(0, (sitecount)):   # New stuff to put results in list of lists.
+        try:
+            testCases.append([sites[i]])
+            #testCases[i].append('pass/fail')
+        except IndexError:
+            debug.append('\t\tIndex error in scrape during testCases append.')
+            pass
+
     for j in conf['terms']:
         debug.append('\t\tIterating term: ' + j )
         termcount = termcount + 1
         criteria = conf['terms'][j]
 
-        # Not pretty version
+        # Not pretty version (leaving this in here for legacy purposes); note this doesn't even need to be siteTups
+        # which is only here because I hadn't created list for fullOut.
 
-        for i in siteTups:
-            debug.append('\t\t\tIterating site: ' + i[0])
-            if i[1].find(criteria) != -1:
-                out.append("Site " + i[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
+        # for i in siteTups:
+        #     debug.append('\t\t\tIterating site: ' + i[0])
+        #     if i[1].find(criteria) != -1:
+        #         out.append("Site " + i[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
+        #     else:
+        #         out.append("Site " + i[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
+
+    # New stuff! Doesn't work yet.
+    sitenum = int(0)
+    for x in testCases: #iterates through sites, starting at index [0]
+        item1 = x
+        termcount = 0
+        for j in conf['terms']: #iterates through terms
+            termcount = termcount + 1 #iterates next term for each loop, starting at 1
+            # compare site results to terms
+            item2 = j
+
+            # return pass/fail value
+            '''
+            testCases is [
+            '''
+            criteria = conf['terms'][j]
+            # print(sitenum)
+            if sites[sitenum].find(criteria) != -1:
+                # print("Site " + x[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
+                fullOut.append([x[0], criteria, 'True'])
             else:
-                out.append("Site " + i[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
-        # Pretty version (does not work yet)
-    # rows = termcount * len(sites())
-    # print(rows)
-    # x = texttable.Texttable()
-    # x.add_rows([['Site','Term','Match'],['junk','stuff','yes']])
-    # out.append(x.draw())
-    debug.append('\tpassfail() end')
+                # print("Site " + x[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
+                fullOut.append([x[0], criteria, 'False'])
+            # store list entry with list [site, term, pf value]
+
+        sitenum = sitenum + 1
+
+
+
     return
+
+'''
+prettyOut() is intended to output easy to read text representative of the results. It uses texttable
+to format the output.
+
+Supposed to look like...
+
+Site 1    Term 1       Yes/no
+Site 1    Term 2       Yes/no
+Site 2    Term 1       Yes/no
+
+Data is in fullOut table of tables which is populated in pass/fail.
+'''
+
+def prettyOut():
+    debug.append('\tprettyOut() start: outputting fancy, readable table to out file.')
+    xtable = texttable.Texttable()
+    xtable.add_rows(fullOut)
+    out.append(xtable.draw())
+    debug.append('\tpassfail() end')
+
 
 '''
 siteinfo() is appending the website response.text output to the 'out'. This was originally in the parse()
@@ -283,6 +330,7 @@ relative /out/ folder.
 '''
 
 def webout():
+    debug.append('\twebout() start: printing to file for output')
     # Set local variables
     lineBreaks = '\n'        # This is making sure the outfile has separate lines.
     n=0                      # Variable for counting lines written to debug.
@@ -304,16 +352,17 @@ def webout():
 
     # Write out file
     for j in out:
-        f.write(str(j))
+        f.write(j)
         f.write(lineBreaks)  # This is to add a new line at the end of each line of the log or text file.
         n = n + 1
         if n % 100 == 0:
-            print('\tWriting outputs: ' + str(n) + ' lines complete.')
+            print('\tWriting outputs: ' + str(n) + ' list items complete.')
         else:
             pass
     else:
         pass
-    print('\tOutput complete: ' + str(n) + ' lines written.\n')
+    print('\tOutput complete: ' + str(n) + ' list items written.\n')
+    debug.append('\twebout() end')
     return
 
 '''
@@ -323,6 +372,7 @@ This might be a candidate for concurrent processing, as it won't complete if the
 '''
 
 def debugout():
+    debug.append('\tdebugout() start: printing debug to file.')
     # Set local variables
     lineBreaks = '\n'        # This is making sure the outfile has separate lines.
     n=0                      # Variable for counting lines written to debug.
@@ -344,7 +394,7 @@ def debugout():
 
     # Write debug file
     for j in debug:
-        f.write(str(j))
+        f.write(j)
         f.write(lineBreaks)  # This is to add a new line at the end of each line of the log or text file.
         n = n + 1
         if n % 100 == 0:
@@ -378,11 +428,12 @@ def main():
     scrape()
     readConf()
     passfail()
+    prettyOut()
     siteinfo()
+    webout()
     debug.append('main() end')
     if debugSet == True:
         debugout()
-    webout()
     return
 
 # Running the program

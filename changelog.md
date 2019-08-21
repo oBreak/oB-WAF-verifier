@@ -26,11 +26,16 @@ function but doesn't really belong there. Since `parse()` needs to run before th
 it breaks the ability to shift where the output shows up in the output log. Since the point of the program is 
 to determine pass/fail checks, the first part of the output shouldn't be a bunch of information that doesn't 
 deliver the point.
-- Added pretty format through `texttable` for the output. This does not work yet. Can be found in the 
+- Added pretty format through `texttable` for the output. Can be found in the 
 `passfail()` function.
 - Verified cross compatibility between Windows, Linux, and Mac
 - Added example.txt in debug to initialize the folder
-
+- Reworked data structures to have `fullOut` table of tables to store values for site
+name, term searched for, and whether or not the site matches the criteria set in the
+configuration.
+- Created `prettyOut()` function to output table to out.
+- Reordered functions such the `siteinfo()` is now after `prettyOut()` which is in line with
+priority of the data delivered.
 
 #### Style
 

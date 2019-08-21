@@ -2,12 +2,14 @@ Last update 2019-08-16
 
 ##### Roadmap:
 
-- Automatically review website content for whether it is restricted by web application firewall.
+ - Automatically review website content for whether it is restricted by web application firewall.
     - Develop filter to identify WAF block messaging
     - Apply filter to response.text
     - Determine how output should be presented (Desire website -> pass/fail, maybe as a table?)
     - Modify output to reflect above choice
 - Cleanup that crazy large list of global variables
+
+
 
 ##### Other:
 
@@ -20,3 +22,6 @@ Last update 2019-08-16
 - [Complete] Error handling for inbound.
 - [Complete] Debug for available functions.
 - [Complete] Handles individual files and runs against all sites listed.
+- [Complete] Change data structures to have an index and method to extract data.
+- [Complete] Handles multiple search terms
+- [Complete] Investigate how the output prints # of lines in debug and output.
