@@ -8,7 +8,7 @@ For checking if WAF protections are working correctly for various sites.
 
 ### Version 
 
-0.1
+0.2
 
 ### Compatibility
 
@@ -26,4 +26,6 @@ Place target web address in .txt or .log files in the `/in/`
 directory. One address per line.
 
 Response text can be found in the `/out/` directory
+
+Debugging fround in `/debug/`
 

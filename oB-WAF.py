@@ -11,7 +11,6 @@ Source code should be found at https://github.com/oBreak/oB-WAF-verifier
 # Imports
 
 import requests
-import urllib.request
 import time
 from pathlib import Path
 import os
@@ -50,7 +49,6 @@ isWin           = 0
 # Windows Paths
 
 debugfileWin    = os.path.join(fileDir, 'debug\\debug.txt')
-# mypathWin       = home + "\\Projects\\gh-oB-WAF-verifier\\in\\"
 mypathWin       = home + "\\Projects\\gh-oB-WAF-Verifier\\in\\"
 outfileWin      = os.path.join(fileDir, 'out\\out.txt')
 
@@ -61,9 +59,6 @@ scanresults     = []
 totalsitesAndScans = int(0)
 percentageComplete = int(0)
 
-
-
-
 # Functions
 
 '''
@@ -71,7 +66,6 @@ inbound() is intended to review all files from the relative /in/ directory that 
 These files are added to the inbound file list (variable iF). If files are outside of specified file types, it
 does not add them to the inbound file list. Inbound file list is then returned by the function.
 '''
-
 def inbound():
     debug.append('\tinbound() start: checking /in/ folder for files containing sites to which we will connect')
     global fileCount, mypath
@@ -79,13 +73,16 @@ def inbound():
     try:
         for f in listdir(mypathWin):
             if f.find(".txt", len(f) - 4) != -1:
-                iF.append(f)
+                if f == "example.txt":
+                    continue
+                else:
+                    iF.append(f)
             elif f.find(".log", len(f) - 4) != -1:
                 iF.append(f)
             elif f.find(".csv", len(f) - 4) != -1:
                 iF.append(f)
             else:
-                #print(f + ' outside of txt, log, or csv types.')
+                debug.append(f + ' outside of txt, log, or csv types.')
                 fileCount = fileCount - 1
             fileCount = fileCount + 1
             print (range(fileCount))
@@ -99,7 +96,7 @@ def inbound():
             elif f.find(".csv", len(f) - 4) != -1:
                 iF.append(f)
             else:
-                #print(f + ' outside of txt, log, or csv types.')
+                debug.append(f + ' outside of txt, log, or csv types.')
                 fileCount = fileCount - 1
             fileCount = fileCount + 1
         mypath = mypathMac
@@ -124,8 +121,6 @@ def readConf():
     debug.append('\treadConf() end')
     return
 
-
-
 '''
 parse() is intended to pull the websites from files in the inbound file list (iF), which is created in inbound(), 
 and adds them to the sites list. This is accomplished by putting the "line" from the file into a tuple in the
@@ -143,9 +138,6 @@ def parse(iF):
     file = open('in/' + iF, 'r')
     for line in file:
         # line is http address
-        # Reset webs to empty tuple
-        webs = ()
-        # print(line + ' in file ' + iF)
         line = line.strip()  # Removes blank lines.
         if line:
             ''' This portion of the script is meant to discover if the inbound files are correctly formatted.
@@ -187,10 +179,7 @@ def scrape():
     global testCases # New stuff
 
     # Take sites tuple which is now (site address, <none>) and use requests to get the text version of the site.
-
     sitecount = len(sites)
-    # print(sitecount)
-
     for i in range(0,(sitecount)):
         try:
             response = requests.get(sites[i])
@@ -205,7 +194,6 @@ def scrape():
         r = response.text
         siteTups.append((sites[i],r))
     debug.append('\tscrape() end')
-
     return
 
 '''
@@ -224,55 +212,30 @@ def passfail():
     debug.append('\tpassfail() start: checking for term matches against web response')
     global siteTups
     global fullOut
-    termcount = 0
     for i in range(0, (sitecount)):   # New stuff to put results in list of lists.
         try:
             testCases.append([sites[i]])
-            #testCases[i].append('pass/fail')
         except IndexError:
             debug.append('\t\tIndex error in scrape during testCases append.')
             pass
 
-    for j in conf['terms']:
-        debug.append('\t\tIterating term: ' + j )
-        termcount = termcount + 1
-        criteria = conf['terms'][j]
-
-        # Not pretty version (leaving this in here for legacy purposes); note this doesn't even need to be siteTups
-        # which is only here because I hadn't created list for fullOut.
-
-        # for i in siteTups:
-        #     debug.append('\t\t\tIterating site: ' + i[0])
-        #     if i[1].find(criteria) != -1:
-        #         out.append("Site " + i[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
-        #     else:
-        #         out.append("Site " + i[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
-
-    # New stuff! Doesn't work yet.
-    sitenum = int(0)
-    for x in testCases: #iterates through sites, starting at index [0]
-        item1 = x
+    for x in range (0,len(testCases)): #iterates through sites, starting at index [0]
         termcount = 0
         for j in conf['terms']: #iterates through terms
             termcount = termcount + 1 #iterates next term for each loop, starting at 1
-            # compare site results to terms
-            item2 = j
-
-            # return pass/fail value
             '''
-            testCases is [
+            compare site results to terms
+            return pass/fail value
             '''
             criteria = conf['terms'][j]
-            # print(sitenum)
-            if sites[sitenum].find(criteria) != -1:
-                # print("Site " + x[0] + " *matches* criteria #" + str(termcount) + ": " + criteria)
-                fullOut.append([x[0], criteria, 'True'])
-            else:
-                # print("Site " + x[0] + " does not match search criteria #" + str(termcount) + ": " + criteria)
-                fullOut.append([x[0], criteria, 'False'])
-            # store list entry with list [site, term, pf value]
-
-        sitenum = sitenum + 1
+            try: # store list entry with list [site, term, pf value]
+                if siteTups[x][1].find(criteria) != -1:
+                    fullOut.append([sites[x], criteria, 'True'])
+                else:
+                    fullOut.append([sites[x], criteria, 'False'])
+            except:
+                fullOut.append([sites[x], criteria, 'Inconclusive; failure in matching.'])
+                continue
     debug.append('\tpassfail() end.')
     return
 
@@ -413,8 +376,8 @@ main() is the main program. Workflow is:
 - Reads configuration file.
 - Checks against search criteria contained in configuration file; adds pass/fail results to out list.
 - Adds output from site response to out list.
-- Print debug log to debug file.
 - Print out list to out file.
+- Print debug log to debug file.
 - End.
 '''
 
@@ -427,9 +390,8 @@ def main():
     readConf()
     passfail()
     prettyOut()
-    siteinfo()
+    # siteinfo() # This puts the full scrape into the out file. Not needed for matching terms, useful for looking at raw scrape
     webout()
-    #debug.append('main() end')    # this doesn't make sense because it's not actually ending here.
     if debugSet == True:
         debugout()
     return

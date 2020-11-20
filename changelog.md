@@ -1,5 +1,18 @@
 # Change Log
 
+0.2 - 2020/11/19
+
+- Achieved minimum viable product for intended purpose
+- Modified `passfail()` to successfully compare terms against the output of
+the get request.
+- Modified readme.md
+- Modified roadmap.md
+- Modified debug to contain HTTP response codes
+- Modified **redacted**.txt to contain relevant websites I intend to check.
+- Modified in to skip example.txt
+- Modified conf.ini to only contain relevant search terms for my purposes.
+- Cleaned up unused variables and notes to self.
+
 0.1 - 2019/08/17
 
 - Added readme.md, requires building this out.
